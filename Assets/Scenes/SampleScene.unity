@@ -841,6 +841,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 196eefad5ca51f54fb50b0a84e1577b8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  obstacleLayers:
+    serializedVersion: 2
+    m_Bits: 64
+  mtvColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  autoResolve: 1
+  smoothResolve: 1
 --- !u!1 &1892852284
 GameObject:
   m_ObjectHideFlags: 0
