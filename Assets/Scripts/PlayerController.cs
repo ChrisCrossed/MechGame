@@ -131,13 +131,23 @@ public class PlayerController : MonoBehaviour
 
         // Percent
         v3_NewVelocity.x = Mathf.Clamp(v3_NewVelocity.x, -100f, 100f);
+        print("NewVelX: " + v3_NewVelocity.x);
 
-        float perc = 100f / Mathf.Abs(v3_NewVelocity.x);
+        float perc = Mathf.Abs(v3_NewVelocity.x) / 100f;
+        print("Perc: " + perc);
         float sign = Mathf.Sign(v3_NewVelocity.x);
 
-        this_Rigidbody.AddForce( new Vector3(500f * (sign * perc), 0f, 0f) );
+        Vector3 desiredForce = new Vector3(500f * (sign * perc), 0f, 0f);
+        print("DesiredForce: " + desiredForce);
+        print("Prev: " + this_Rigidbody.angularVelocity);
+        Vector3 totalForceApplied = desiredForce - this_Rigidbody.angularVelocity;
 
-        v3_OldVelocity = v3_NewVelocity;
+        print("Applying Force: " + totalForceApplied);
+        print("---");
+
+        this_Rigidbody.AddForce(totalForceApplied);
+
+        v3_OldVelocity = this_Rigidbody.angularVelocity;
         /*
         if (PlayerInput.MoveVector.Y == 1f)
         {
