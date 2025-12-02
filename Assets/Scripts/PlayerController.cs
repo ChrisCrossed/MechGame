@@ -74,11 +74,13 @@ public class PlayerController : MonoBehaviour
 
         FIXEDUPDATE_PlayerMovement();
     }
-    float val = 0f;
+    float Acceleration = 450f;
+    float ReverseAcceleration = 375f;
     Vector3 v3_OldVelocity;
+    int frames = 0;
     private void FIXEDUPDATE_PlayerMovement()
     {
-        // Vector3 v3_OldVelocity = rigidbody_OLD.linearVelocity;
+        Vector3 v3_OldVelocity = rigidbody_OLD.linearVelocity;
         Vector3 v3_OldVelocity_Normalized = v3_OldVelocity.normalized;
         Vector3 v3_NewVelocity = v3_OldVelocity;
 
@@ -91,11 +93,11 @@ public class PlayerController : MonoBehaviour
                 // Opposite sign of input gets most velocity change
                 if (v3_OldVelocity.x < 0f)
                 {
-                    v3_NewVelocity.x += Time.fixedDeltaTime * 5f;
+                    v3_NewVelocity.x += Time.fixedDeltaTime * Acceleration;
                 }
                 else
                 {
-                    v3_NewVelocity.x += Time.fixedDeltaTime * 3f;
+                    v3_NewVelocity.x += Time.fixedDeltaTime * ReverseAcceleration;
                 }
             }
             else if(v2_Input.x < 0f)
@@ -103,33 +105,37 @@ public class PlayerController : MonoBehaviour
                 // Opposite sign of input gets most velocity change
                 if(v3_OldVelocity.x > 0f)
                 {
-                    v3_NewVelocity.x -= Time.fixedDeltaTime * 5f;
+                    v3_NewVelocity.x -= Time.fixedDeltaTime * Acceleration;
                 }
                 else
                 {
-                    v3_NewVelocity.x -= Time.fixedDeltaTime * 3f;
+                    v3_NewVelocity.x -= Time.fixedDeltaTime * ReverseAcceleration;
                 }
             }
         }
         else
         {
-            if(v3_NewVelocity.x < 0f)
+            if (v3_NewVelocity.x < 0f)
             {
-                v3_NewVelocity.x += Time.fixedDeltaTime * 3f;
-                if (v3_OldVelocity.x > 0f)
+                v3_NewVelocity.x += Time.fixedDeltaTime * ReverseAcceleration;
+                if (v3_NewVelocity.x > 0f)
                     v3_NewVelocity.x = 0f;
             }
             else
             {
-                v3_NewVelocity.x -= Time.fixedDeltaTime * 3f;
-                if (v3_OldVelocity.x < 0f)
+                v3_NewVelocity.x -= Time.fixedDeltaTime * ReverseAcceleration;
+                if (v3_NewVelocity.x < 0f)
                     v3_NewVelocity.x = 0f;
             }
         }
 
-        v3_NewVelocity.x = Mathf.Clamp(v3_NewVelocity.x, -10f, 10f);
+        // Percent
+        v3_NewVelocity.x = Mathf.Clamp(v3_NewVelocity.x, -100f, 100f);
 
-        print("Vel: " + v3_NewVelocity.x);
+        float perc = 100f / Mathf.Abs(v3_NewVelocity.x);
+        float sign = Mathf.Sign(v3_NewVelocity.x);
+
+        this_Rigidbody.AddForce( new Vector3(500f * (sign * perc), 0f, 0f) );
 
         v3_OldVelocity = v3_NewVelocity;
         /*
