@@ -225,7 +225,7 @@ public class PlayerController : MonoBehaviour
             xVal += Time.deltaTime * 10f;
         else
         {
-            if(xVal != 0f)
+            if(xVal != 0f && v2_Input.x == 0f)
             {
                 xVal += Mathf.Sign(xVal) * -1f * Time.deltaTime * 10f;
 
@@ -234,15 +234,18 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        if (Mathf.Sign(v2_Input.y) < 0f)
+        if (v2_Input.y < 0f)
             zVal -= Time.deltaTime * 10f;
-        else if (Mathf.Sign(v2_Input.y) > 0f)
+        else if (v2_Input.y > 0f)
             zVal += Time.deltaTime * 10f;
         else
         {
             if (zVal != 0f)
             {
-                zVal += Mathf.Sign(zVal) * -1f * Time.deltaTime * 10f;
+                float mult = -1f;
+                if (v2_Input.y < 0f)
+                    mult = 1f;
+                zVal += mult * Time.deltaTime * 10f;
 
                 if (zVal < 0.01f && zVal > -0.01f)
                     zVal = 0f;
@@ -251,6 +254,11 @@ public class PlayerController : MonoBehaviour
 
         xVal = Mathf.Clamp(xVal, -1f, 1f);
         zVal = Mathf.Clamp(zVal, -1f, 1f);
+
+        print("Sign: " + Mathf.Sign(v2_Input.y));
+        print("Y Val: " + v2_Input.y);
+        print("Val: " + zVal);
+        print("---");
     }
     #endregion
 
