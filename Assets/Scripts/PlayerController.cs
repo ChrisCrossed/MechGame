@@ -45,9 +45,15 @@ public class PlayerController : MonoBehaviour
     {
         // UPDATE_Input();
         TempInput();
+        TempPerc();
 
         Vector3 playerVel = new Vector3(v2_Input.x, 0f, v2_Input.y);
-        playerVel *= 50f * Time.deltaTime;
+
+        float xPerc = Mathf.Abs(xVal);
+        float zPerc = Mathf.Abs(zVal);
+
+        playerVel.x *= 50f * Time.deltaTime * xVal;
+        playerVel.z *= 50f * Time.deltaTime * zVal;
 
         playerVel = gameObject.transform.rotation * playerVel;
 
@@ -207,6 +213,44 @@ public class PlayerController : MonoBehaviour
 
         JumpPressed = JumpButton && !JumpButton_OLD;
         #endregion Jump
+    }
+
+    float xVal = 0f;
+    float zVal = 0f;
+    void TempPerc()
+    {
+        if (Mathf.Sign(v2_Input.x) < 0f)
+            xVal -= Time.deltaTime * 10f;
+        else if (Mathf.Sign(v2_Input.x) > 0f)
+            xVal += Time.deltaTime * 10f;
+        else
+        {
+            if(xVal != 0f)
+            {
+                xVal += Mathf.Sign(xVal) * -1f * Time.deltaTime * 10f;
+
+                if(xVal < 0.01f && xVal > -0.01f)
+                    xVal = 0f;
+            }
+        }
+
+        if (Mathf.Sign(v2_Input.y) < 0f)
+            zVal -= Time.deltaTime * 10f;
+        else if (Mathf.Sign(v2_Input.y) > 0f)
+            zVal += Time.deltaTime * 10f;
+        else
+        {
+            if (zVal != 0f)
+            {
+                zVal += Mathf.Sign(zVal) * -1f * Time.deltaTime * 10f;
+
+                if (zVal < 0.01f && zVal > -0.01f)
+                    zVal = 0f;
+            }
+        }
+
+        xVal = Mathf.Clamp(xVal, -1f, 1f);
+        zVal = Mathf.Clamp(zVal, -1f, 1f);
     }
     #endregion
 
