@@ -12,6 +12,8 @@ public class PlayerController : MonoBehaviour
 
     private bool PlayerJump;
 
+    private CharacterController this_CharController;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -32,6 +34,8 @@ public class PlayerController : MonoBehaviour
     void INIT_PlayerObjectComponents()
     {
         this_Rigidbody = gameObject.GetComponent<Rigidbody>();
+
+        this_CharController = gameObject.GetComponent<CharacterController>();
     }
 
     #endregion Init Functions
@@ -41,6 +45,13 @@ public class PlayerController : MonoBehaviour
     {
         // UPDATE_Input();
         TempInput();
+
+        Vector3 playerVel = new Vector3(v2_Input.x, 0f, v2_Input.y);
+        playerVel *= 50f * Time.deltaTime;
+
+        playerVel = gameObject.transform.rotation * playerVel;
+
+        this_CharController.Move(playerVel);
     }
 
     #region Update Functions
@@ -70,9 +81,9 @@ public class PlayerController : MonoBehaviour
     Rigidbody rigidbody_OLD;
     private void FixedUpdate()
     {
-        rigidbody_OLD = this_Rigidbody;
+        // rigidbody_OLD = this_Rigidbody;
 
-        FIXEDUPDATE_PlayerMovement();
+        // FIXEDUPDATE_PlayerMovement();
     }
     float Acceleration = 450f;
     float ReverseAcceleration = 375f;

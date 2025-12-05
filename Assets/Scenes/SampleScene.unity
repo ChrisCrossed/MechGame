@@ -700,6 +700,7 @@ GameObject:
   - component: {fileID: 1881331785}
   - component: {fileID: 1881331789}
   - component: {fileID: 1881331790}
+  - component: {fileID: 1881331791}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -847,6 +848,31 @@ MonoBehaviour:
   mtvColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   autoResolve: 1
   smoothResolve: 1
+--- !u!143 &1881331791
+CharacterController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1881331784}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Height: 2
+  m_Radius: 0.5
+  m_SlopeLimit: 45
+  m_StepOffset: 0.3
+  m_SkinWidth: 0.08
+  m_MinMoveDistance: 0.001
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &1892852284
 GameObject:
   m_ObjectHideFlags: 0
