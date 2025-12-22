@@ -43,8 +43,10 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        return;
+
         // UPDATE_Input();
-        TempInput();
+        // TempInput();
         TempPerc();
 
         Vector3 playerVel = new Vector3(v2_Input.x, 0f, v2_Input.y);

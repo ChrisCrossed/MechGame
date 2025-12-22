@@ -916,8 +916,8 @@ namespace InternalRealtimeCSG
             if (!ModelTraits.IsModelSelectable(model))
                 return false;
 
-            if (ignoreUnrenderables && !ModelTraits.WillModelRender(model) &&
-                !Selection.Contains(model.gameObject.GetInstanceID()))
+			if (ignoreUnrenderables && !ModelTraits.WillModelRender(model) &&
+                !Selection.Contains((EntityId)model.gameObject.GetInstanceID()))
                 return false;
 
 			LegacyBrushIntersection[] modelIntersections;
