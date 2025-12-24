@@ -10,7 +10,6 @@ public struct PlayerInputObject
     internal InputAction IA_MoveVector;
     internal InputAction IA_Jump;
 
-    // Note To Self - I believe this is *not* supposed to be static since Static requires a return type so it's used like a formula
     public void Init()
     {
         IA_MoveVector = InputSystem.actions.FindAction("Move");
@@ -48,16 +47,15 @@ public class c_PlayerInput : MonoBehaviour
     void Update()
     {
         inputObject.InputUpdate();
-
-        print(inputObject.MoveVector);
     }
 
     public Vector2 GetInputVector()
     {
-        Vector2 returnVector = new Vector2();
+        return inputObject.MoveVector;
+    }
 
-
-
-        return returnVector;
+    public bool GetJumpButton()
+    {
+        return inputObject.Jump;
     }
 }

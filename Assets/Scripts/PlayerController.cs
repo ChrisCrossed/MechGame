@@ -5,8 +5,7 @@ using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
-    private PlayerInputObject PlayerInput;
-    private PlayerInputObject PlayerInput_OLD;
+    private c_PlayerInput PlayerInput;
 
     private Rigidbody this_Rigidbody;
 
@@ -26,9 +25,7 @@ public class PlayerController : MonoBehaviour
     #region Init Functions
     void INIT_PlayerInput()
     {
-        PlayerInput = new PlayerInputObject();
-
-        PlayerInput.Init();
+        PlayerInput = GameObject.Find("GameManager").GetComponent<c_PlayerInput>();
     }
 
     void INIT_PlayerObjectComponents()
@@ -43,226 +40,36 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        return;
-
-        // UPDATE_Input();
-        // TempInput();
-        TempPerc();
-
-        Vector3 playerVel = new Vector3(v2_Input.x, 0f, v2_Input.y);
-
-        float xPerc = Mathf.Abs(xVal);
-        float zPerc = Mathf.Abs(zVal);
-
-        playerVel.x *= 50f * Time.deltaTime * xVal;
-        playerVel.z *= 50f * Time.deltaTime * zVal;
-
-        playerVel = gameObject.transform.rotation * playerVel;
-
-        this_CharController.Move(playerVel);
+        UpdateMovement();
     }
 
     #region Update Functions
 
-    private PlayerInputObject UPDATE_Input()
+    void UpdateMovement()
     {
-        PlayerInput_OLD = PlayerInput;
+        Vector2 v2_InputVector = PlayerInput.GetInputVector();
+        if (v2_InputVector.magnitude < 0.25f)
+            return;
 
-        PlayerInput.InputUpdate();
+        Vector3 v3_PlayerInput = new Vector3(v2_InputVector.x, 0, v2_InputVector.y);
 
-        #region Jump Evaluation
-        PlayerJump = false;
+        Vector3 playerVel = gameObject.transform.rotation * v3_PlayerInput;
+        playerVel *= Time.deltaTime;
 
-        if (PlayerInput.Jump && !PlayerInput_OLD.Jump)
-            PlayerJump = true;
-        #endregion Jump Evaluation
-
-        print(PlayerInput.MoveVector);
-
-        return PlayerInput;
+        this_CharController.Move(playerVel);
     }
 
     #endregion Update Functions
 
     #region Physics Updates
 
-    Rigidbody rigidbody_OLD;
     private void FixedUpdate()
     {
-        // rigidbody_OLD = this_Rigidbody;
-
-        // FIXEDUPDATE_PlayerMovement();
+        
     }
-    float Acceleration = 450f;
-    float ReverseAcceleration = 375f;
-    Vector3 v3_OldVelocity;
-    int frames = 0;
-    private void FIXEDUPDATE_PlayerMovement()
-    {
-        Vector3 v3_OldVelocity = rigidbody_OLD.linearVelocity;
-        Vector3 v3_OldVelocity_Normalized = v3_OldVelocity.normalized;
-        Vector3 v3_NewVelocity = v3_OldVelocity;
-
-        print("Input: " + v2_Input);
-
-        if(v2_Input.x != 0f)
-        {
-            if(v2_Input.x > 0f)
-            {
-                // Opposite sign of input gets most velocity change
-                if (v3_OldVelocity.x < 0f)
-                {
-                    v3_NewVelocity.x += Time.fixedDeltaTime * Acceleration;
-                }
-                else
-                {
-                    v3_NewVelocity.x += Time.fixedDeltaTime * ReverseAcceleration;
-                }
-            }
-            else if(v2_Input.x < 0f)
-            {
-                // Opposite sign of input gets most velocity change
-                if(v3_OldVelocity.x > 0f)
-                {
-                    v3_NewVelocity.x -= Time.fixedDeltaTime * Acceleration;
-                }
-                else
-                {
-                    v3_NewVelocity.x -= Time.fixedDeltaTime * ReverseAcceleration;
-                }
-            }
-        }
-        else
-        {
-            if (v3_NewVelocity.x < 0f)
-            {
-                v3_NewVelocity.x += Time.fixedDeltaTime * ReverseAcceleration;
-                if (v3_NewVelocity.x > 0f)
-                    v3_NewVelocity.x = 0f;
-            }
-            else
-            {
-                v3_NewVelocity.x -= Time.fixedDeltaTime * ReverseAcceleration;
-                if (v3_NewVelocity.x < 0f)
-                    v3_NewVelocity.x = 0f;
-            }
-        }
-
-        // Percent
-        v3_NewVelocity.x = Mathf.Clamp(v3_NewVelocity.x, -100f, 100f);
-        print("NewVelX: " + v3_NewVelocity.x);
-
-        float perc = Mathf.Abs(v3_NewVelocity.x) / 100f;
-        print("Perc: " + perc);
-        float sign = Mathf.Sign(v3_NewVelocity.x);
-
-        Vector3 desiredForce = new Vector3(500f * (sign * perc), 0f, 0f);
-        print("DesiredForce: " + desiredForce);
-        print("Prev: " + this_Rigidbody.angularVelocity);
-        Vector3 totalForceApplied = desiredForce - this_Rigidbody.angularVelocity;
-
-        print("Applying Force: " + totalForceApplied);
-        print("---");
-
-        this_Rigidbody.AddForce(totalForceApplied);
-
-        v3_OldVelocity = this_Rigidbody.angularVelocity;
-        /*
-        if (PlayerInput.MoveVector.Y == 1f)
-        {
-            print("True");
-            this_Rigidbody.linearVelocity = gameObject.transform.rotation * new Vector3(0f, 5f, 0f);
-        }
-        */
-    }
-
 
     #endregion Physics Updates
 
-    #region TEMP INPUT
-
-    Vector2 v2_Input;
-    bool JumpButton;
-    bool JumpButton_OLD;
-    bool JumpPressed;
-    void TempInput()
-    {
-        #region Input
-        v2_Input = new Vector2();
-        bool leftPressed = Input.GetKey(KeyCode.A);
-        bool rightPressed = Input.GetKey(KeyCode.D);
-        bool upPressed = Input.GetKey(KeyCode.W);
-        bool downPressed = Input.GetKey(KeyCode.S);
-
-        if (leftPressed && !rightPressed)
-            v2_Input.x = -1f;
-        else if(rightPressed && !leftPressed)
-            v2_Input.x = 1f;
-
-        if(upPressed && !downPressed)
-            v2_Input.y = 1f;
-        else if(downPressed && !upPressed)
-            v2_Input.y = -1f;
-
-        v2_Input.Normalize();
-        #endregion Input
-
-        #region Jump
-        JumpButton_OLD = JumpButton;
-        JumpButton = false;
-        if (Input.GetKey(KeyCode.Space))
-            JumpButton = true;
-
-        JumpPressed = JumpButton && !JumpButton_OLD;
-        #endregion Jump
-    }
-
-    float xVal = 0f;
-    float zVal = 0f;
-    void TempPerc()
-    {
-        if (Mathf.Sign(v2_Input.x) < 0f)
-            xVal -= Time.deltaTime * 10f;
-        else if (Mathf.Sign(v2_Input.x) > 0f)
-            xVal += Time.deltaTime * 10f;
-        else
-        {
-            if(xVal != 0f && v2_Input.x == 0f)
-            {
-                xVal += Mathf.Sign(xVal) * -1f * Time.deltaTime * 10f;
-
-                if(xVal < 0.01f && xVal > -0.01f)
-                    xVal = 0f;
-            }
-        }
-
-        if (v2_Input.y < 0f)
-            zVal -= Time.deltaTime * 10f;
-        else if (v2_Input.y > 0f)
-            zVal += Time.deltaTime * 10f;
-        else
-        {
-            if (zVal != 0f)
-            {
-                float mult = -1f;
-                if (v2_Input.y < 0f)
-                    mult = 1f;
-                zVal += mult * Time.deltaTime * 10f;
-
-                if (zVal < 0.01f && zVal > -0.01f)
-                    zVal = 0f;
-            }
-        }
-
-        xVal = Mathf.Clamp(xVal, -1f, 1f);
-        zVal = Mathf.Clamp(zVal, -1f, 1f);
-
-        print("Sign: " + Mathf.Sign(v2_Input.y));
-        print("Y Val: " + v2_Input.y);
-        print("Val: " + zVal);
-        print("---");
-    }
-    #endregion
 
     #region Collider Extensions
 
