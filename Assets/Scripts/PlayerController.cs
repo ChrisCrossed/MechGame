@@ -8,6 +8,7 @@ public class PlayerController : MonoBehaviour
     private c_PlayerInput PlayerInput;
 
     private Rigidbody this_Rigidbody;
+    private GameObject this_CameraObject;
 
     private bool PlayerJump;
 
@@ -33,6 +34,9 @@ public class PlayerController : MonoBehaviour
         this_Rigidbody = gameObject.GetComponent<Rigidbody>();
 
         this_CharController = gameObject.GetComponent<CharacterController>();
+
+        this_CameraObject = gameObject.transform.Find("Main Camera").gameObject;
+        cameraAngle = this_CameraObject.transform.localEulerAngles.x;
     }
 
     #endregion Init Functions
@@ -40,9 +44,9 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        // UpdateJump();
+        UpdateJump();
         UpdateLook();
-        // UpdateMovement();
+        UpdateMovement();
     }
 
     #region Update Functions
@@ -66,6 +70,7 @@ public class PlayerController : MonoBehaviour
 
     }
 
+    float cameraAngle;
     void UpdateLook()
     {
         Vector2 v2_LookVector = PlayerInput.GetLookVector();
@@ -73,11 +78,20 @@ public class PlayerController : MonoBehaviour
         if (v2_LookVector == new Vector2())
             return;
 
-        Vector3 v3_PlayerDirection = this_CharController.transform.localEulerAngles;
-        print(v3_PlayerDirection);
-        print(v2_LookVector);
-        v3_PlayerDirection.y += v2_LookVector.x;
-        this_CharController.transform.localEulerAngles = v3_PlayerDirection;
+        if(v2_LookVector.x != 0f)
+        {
+            Vector3 v3_PlayerDirection = this_CharController.transform.localEulerAngles;
+            v3_PlayerDirection.y += v2_LookVector.x;
+            this_CharController.transform.localEulerAngles = v3_PlayerDirection;
+        }
+        
+        if(v2_LookVector.y != 0f)
+        {
+            print(String.Format("{0:0.000000}", v2_LookVector.y));
+            cameraAngle -= v2_LookVector.y;
+            cameraAngle = Mathf.Clamp(cameraAngle, -44f, 44f);
+            this_CameraObject.transform.localEulerAngles = new Vector3(cameraAngle, 0f, 0f);
+        }
     }
 
     #endregion Update Functions
