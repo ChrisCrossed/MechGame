@@ -40,7 +40,9 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        UpdateMovement();
+        // UpdateJump();
+        UpdateLook();
+        // UpdateMovement();
     }
 
     #region Update Functions
@@ -57,6 +59,25 @@ public class PlayerController : MonoBehaviour
         playerVel *= Time.deltaTime;
 
         this_CharController.Move(playerVel);
+    }
+
+    void UpdateJump()
+    {
+
+    }
+
+    void UpdateLook()
+    {
+        Vector2 v2_LookVector = PlayerInput.GetLookVector();
+
+        if (v2_LookVector == new Vector2())
+            return;
+
+        Vector3 v3_PlayerDirection = this_CharController.transform.localEulerAngles;
+        print(v3_PlayerDirection);
+        print(v2_LookVector);
+        v3_PlayerDirection.y += v2_LookVector.x;
+        this_CharController.transform.localEulerAngles = v3_PlayerDirection;
     }
 
     #endregion Update Functions
