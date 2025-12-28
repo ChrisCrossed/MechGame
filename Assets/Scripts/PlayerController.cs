@@ -6,6 +6,7 @@ using UnityEngine.InputSystem;
 public class PlayerController : MonoBehaviour
 {
     private c_PlayerInput PlayerInput;
+    private float LookMultiplier = 2.5f;
 
     private Rigidbody this_Rigidbody;
     private GameObject this_CameraObject;
@@ -41,12 +42,34 @@ public class PlayerController : MonoBehaviour
 
     #endregion Init Functions
 
+    bool QuitPressed;
+    float QuitTimer = 0f;
     // Update is called once per frame
     void Update()
     {
         UpdateJump();
         UpdateLook();
         UpdateMovement();
+        UpdateQuitButton();
+
+        if(QuitPressed)
+        {
+            print("Pressed");
+            if (QuitTimer > 0f)
+            {
+                Application.Quit();
+                print("Quit");
+            }
+            else
+                QuitTimer = 0.2f;
+        }
+
+        if(QuitTimer > 0f)
+        {
+            QuitTimer -= Time.deltaTime;
+            if (QuitTimer < 0f)
+                QuitTimer = 0f;
+        }
     }
 
     #region Update Functions
@@ -81,17 +104,22 @@ public class PlayerController : MonoBehaviour
         if(v2_LookVector.x != 0f)
         {
             Vector3 v3_PlayerDirection = this_CharController.transform.localEulerAngles;
-            v3_PlayerDirection.y += v2_LookVector.x;
+            v3_PlayerDirection.y += v2_LookVector.x * LookMultiplier;
             this_CharController.transform.localEulerAngles = v3_PlayerDirection;
         }
         
         if(v2_LookVector.y != 0f)
         {
-            print(String.Format("{0:0.000000}", v2_LookVector.y));
-            cameraAngle -= v2_LookVector.y;
+            // print(v2_LookVector);
+            cameraAngle -= v2_LookVector.y * LookMultiplier;
             cameraAngle = Mathf.Clamp(cameraAngle, -44f, 44f);
             this_CameraObject.transform.localEulerAngles = new Vector3(cameraAngle, 0f, 0f);
         }
+    }
+
+    void UpdateQuitButton()
+    {
+        QuitPressed = PlayerInput.QuitButton();
     }
 
     #endregion Update Functions

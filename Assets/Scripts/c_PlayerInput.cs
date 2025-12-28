@@ -8,15 +8,19 @@ public struct PlayerInputObject
     public bool Jump { get; internal set; }
     public Vector2 LookVector { get; internal set; }
 
+    public bool QuitButton { get; internal set; }
+
     internal InputAction IA_MoveVector;
     internal InputAction IA_Jump;
     internal InputAction IA_Look;
+    internal InputAction IA_Quit;
 
     public void Init()
     {
         IA_MoveVector = InputSystem.actions.FindAction("Move");
         IA_Jump = InputSystem.actions.FindAction("Jump");
         IA_Look = InputSystem.actions.FindAction("Look");
+        IA_Quit = InputSystem.actions.FindAction("Quit");
     }
 
     internal void InputUpdate()
@@ -25,7 +29,11 @@ public struct PlayerInputObject
 
         Jump = IA_Jump.IsPressed();
 
+        // TODO: Run If-check when system is not using a mouse for the ReadValue
         LookVector = IA_Look.ReadValue<Vector2>();
+        // LookVector = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
+
+        QuitButton = IA_Quit.IsPressed();
     }
 
     internal string PrintTest()
@@ -65,5 +73,19 @@ public class c_PlayerInput : MonoBehaviour
     public Vector2 GetLookVector()
     {
         return inputObject.LookVector;
+    }
+
+    bool WasPressed_Quit;
+    bool IsPressed_Quit;
+    public bool QuitButton()
+    {
+        IsPressed_Quit = false;
+
+        if (inputObject.QuitButton && !WasPressed_Quit)
+            IsPressed_Quit = true;
+
+        WasPressed_Quit = inputObject.QuitButton;
+
+        return IsPressed_Quit;
     }
 }
