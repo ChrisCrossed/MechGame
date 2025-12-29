@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using System;
 using System.Collections;
+using System.Net;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -65,6 +66,7 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
         UpdateJump();
+        UpdateJumpJet();
         UpdateLook();
         UpdateMovement();
         UpdateQuitButton();
@@ -106,11 +108,6 @@ public class PlayerController : MonoBehaviour
     {
         Vector2 v2_InputVector = PlayerInput.GetInputVector();
         
-        /*
-        if (v2_InputVector.magnitude < 0.25f)
-            return;
-        */
-
         Vector3 v3_PlayerInput = new Vector3(v2_InputVector.x, 0, v2_InputVector.y).normalized;
 
         Vector3 playerVel = gameObject.transform.rotation * v3_PlayerInput;
@@ -122,30 +119,69 @@ public class PlayerController : MonoBehaviour
 
     private float JumpHeight = 1.5f;
 
-    private float Gravity = -9.81f * 7f;
+    private float Gravity = -9.81f * 5f;
 
     private float yVel;
+    private bool IsGrounded;
+    float hitYPos;
     void UpdateJump()
     {
         RaycastHit _hit;
         int layerMask = LayerMask.GetMask("Terrain");
         CapsuleCollider _collider = gameObject.GetComponent<CapsuleCollider>();
+        
+        IsGrounded = false;
 
-        if (Physics.SphereCast(gameObject.transform.position, _collider.radius - 0.05f, Vector3.down, out _hit, _collider.radius + 0.14f, layerMask))
+        bool DownwardCastHit = Physics.SphereCast(gameObject.transform.position, _collider.radius - 0.05f, Vector3.down, out _hit, _collider.radius + 0.14f, layerMask);
+
+        if (DownwardCastHit && !JetpackActive)
         {
             yVel = 0f;
+            IsGrounded = true;
+            hitYPos = _hit.point.y;
 
             if (PlayerInput.GetJumpButton())
             {
                 yVel = Mathf.Sqrt(JumpHeight * -2f * Gravity);
+                IsGrounded = false;
             }
         }
         else
         {
-            yVel += Gravity * Time.deltaTime;
+            if(!JetpackActive)
+                yVel += Gravity * Time.deltaTime;
         }
 
-        print("Vert Vel: " + yVel);
+        
+    }
+
+    bool JetpackActive = false;
+    float JetpackMaxVertVelocity = 7f; // 4 Feels like Tribes 'Heavy' Velocity
+    float JetpackArmorGravityInfluence = 10f;
+    void UpdateJumpJet()
+    {
+        JumpJetButtonState state = PlayerInput.JumpJetState();
+
+        switch (state)
+        {
+            case JumpJetButtonState.Pressed:
+            case JumpJetButtonState.Held:
+                
+                JetpackActive = true;
+                yVel += Gravity / JetpackArmorGravityInfluence * -1f * Time.deltaTime;
+
+                if(yVel > JetpackMaxVertVelocity)
+                    yVel = JetpackMaxVertVelocity;
+
+                print("Vert Vel: " + (Gravity / JetpackArmorGravityInfluence * -1f * Time.deltaTime));
+                break;
+            case JumpJetButtonState.Released:
+            case JumpJetButtonState.Off:
+                JetpackActive = false;
+                break;
+            default:
+                break;
+        }
     }
 
     float cameraAngle;
