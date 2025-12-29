@@ -1,12 +1,13 @@
+using NUnit.Framework;
 using System;
 using System.Collections;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
     private c_PlayerInput PlayerInput;
-    private float LookMultiplier = 2.5f;
 
     private Rigidbody this_Rigidbody;
     private GameObject this_CameraObject;
@@ -14,6 +15,19 @@ public class PlayerController : MonoBehaviour
     private bool PlayerJump;
 
     private CharacterController this_CharController;
+
+    #region TestContext States
+    private bool TestContext_1;
+    #endregion TestContext States
+
+    [SerializeField]
+    private float MoveSpeed;
+
+    [SerializeField]
+    private float HorizontalLookMultiplier;
+
+    [SerializeField]
+    private float VerticalLookMultiplier;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -28,6 +42,9 @@ public class PlayerController : MonoBehaviour
     void INIT_PlayerInput()
     {
         PlayerInput = GameObject.Find("GameManager").GetComponent<c_PlayerInput>();
+
+        TestContext_1 = false;
+        ToggleCursorState(TestContext_1);
     }
 
     void INIT_PlayerObjectComponents()
@@ -52,7 +69,8 @@ public class PlayerController : MonoBehaviour
         UpdateMovement();
         UpdateQuitButton();
 
-        if(QuitPressed)
+        #region Quit Button
+        if (QuitPressed)
         {
             print("Pressed");
             if (QuitTimer > 0f)
@@ -70,6 +88,16 @@ public class PlayerController : MonoBehaviour
             if (QuitTimer < 0f)
                 QuitTimer = 0f;
         }
+        #endregion Quit Button
+
+        #region Mouse Cursor
+        if(PlayerInput.TestContext_1())
+        {
+            TestContext_1 = !TestContext_1;
+            ToggleCursorState(TestContext_1);
+        }
+
+        #endregion Mouse Cursor
     }
 
     #region Update Functions
@@ -77,20 +105,47 @@ public class PlayerController : MonoBehaviour
     void UpdateMovement()
     {
         Vector2 v2_InputVector = PlayerInput.GetInputVector();
+        
+        /*
         if (v2_InputVector.magnitude < 0.25f)
             return;
+        */
 
-        Vector3 v3_PlayerInput = new Vector3(v2_InputVector.x, 0, v2_InputVector.y);
+        Vector3 v3_PlayerInput = new Vector3(v2_InputVector.x, 0, v2_InputVector.y).normalized;
 
         Vector3 playerVel = gameObject.transform.rotation * v3_PlayerInput;
-        playerVel *= Time.deltaTime;
+        playerVel *= MoveSpeed;
+        playerVel += yVel * Vector3.up;
 
-        this_CharController.Move(playerVel);
+        this_CharController.Move(playerVel * Time.deltaTime);
     }
 
+    private float JumpHeight = 1.5f;
+
+    private float Gravity = -9.81f * 7f;
+
+    private float yVel;
     void UpdateJump()
     {
+        RaycastHit _hit;
+        int layerMask = LayerMask.GetMask("Terrain");
+        CapsuleCollider _collider = gameObject.GetComponent<CapsuleCollider>();
 
+        if (Physics.SphereCast(gameObject.transform.position, _collider.radius - 0.05f, Vector3.down, out _hit, _collider.radius + 0.14f, layerMask))
+        {
+            yVel = 0f;
+
+            if (PlayerInput.GetJumpButton())
+            {
+                yVel = Mathf.Sqrt(JumpHeight * -2f * Gravity);
+            }
+        }
+        else
+        {
+            yVel += Gravity * Time.deltaTime;
+        }
+
+        print("Vert Vel: " + yVel);
     }
 
     float cameraAngle;
@@ -104,14 +159,14 @@ public class PlayerController : MonoBehaviour
         if(v2_LookVector.x != 0f)
         {
             Vector3 v3_PlayerDirection = this_CharController.transform.localEulerAngles;
-            v3_PlayerDirection.y += v2_LookVector.x * LookMultiplier;
+            v3_PlayerDirection.y += v2_LookVector.x * HorizontalLookMultiplier;
             this_CharController.transform.localEulerAngles = v3_PlayerDirection;
         }
         
         if(v2_LookVector.y != 0f)
         {
             // print(v2_LookVector);
-            cameraAngle -= v2_LookVector.y * LookMultiplier;
+            cameraAngle -= v2_LookVector.y * VerticalLookMultiplier;
             cameraAngle = Mathf.Clamp(cameraAngle, -44f, 44f);
             this_CameraObject.transform.localEulerAngles = new Vector3(cameraAngle, 0f, 0f);
         }
@@ -120,6 +175,16 @@ public class PlayerController : MonoBehaviour
     void UpdateQuitButton()
     {
         QuitPressed = PlayerInput.QuitButton();
+    }
+
+    void ToggleCursorState(bool IsVisible)
+    {
+        if (!IsVisible)
+            Cursor.lockState = CursorLockMode.Locked;
+        else
+            Cursor.lockState = CursorLockMode.None;
+
+            Cursor.visible = IsVisible;
     }
 
     #endregion Update Functions

@@ -9,11 +9,14 @@ public struct PlayerInputObject
     public Vector2 LookVector { get; internal set; }
 
     public bool QuitButton { get; internal set; }
+    
+    public bool TestContext_1 { get; internal set; }
 
     internal InputAction IA_MoveVector;
     internal InputAction IA_Jump;
     internal InputAction IA_Look;
     internal InputAction IA_Quit;
+    internal InputAction IA_TestContext_1;
 
     public void Init()
     {
@@ -21,6 +24,7 @@ public struct PlayerInputObject
         IA_Jump = InputSystem.actions.FindAction("Jump");
         IA_Look = InputSystem.actions.FindAction("Look");
         IA_Quit = InputSystem.actions.FindAction("Quit");
+        IA_TestContext_1 = InputSystem.actions.FindAction("TestContext_1");
     }
 
     internal void InputUpdate()
@@ -34,6 +38,8 @@ public struct PlayerInputObject
         // LookVector = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
 
         QuitButton = IA_Quit.IsPressed();
+
+        TestContext_1 = IA_TestContext_1.IsPressed();
     }
 
     internal string PrintTest()
@@ -87,5 +93,19 @@ public class c_PlayerInput : MonoBehaviour
         WasPressed_Quit = inputObject.QuitButton;
 
         return IsPressed_Quit;
+    }
+
+    bool WasPressed_TestContext_1;
+    bool IsPressed_TestContext_1;
+    public bool TestContext_1()
+    {
+        IsPressed_TestContext_1 = false;
+
+        if(inputObject.TestContext_1 && !WasPressed_TestContext_1)
+            IsPressed_TestContext_1 = true;
+
+        WasPressed_TestContext_1 = inputObject.TestContext_1;
+
+        return IsPressed_TestContext_1;
     }
 }

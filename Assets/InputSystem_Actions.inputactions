@@ -95,6 +95,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "TestContext_1",
+                    "type": "Button",
+                    "id": "b56280d8-1b14-4cb1-8dd5-762332af71a1",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -491,6 +500,17 @@
                     "processors": "",
                     "groups": ";Keyboard&Mouse",
                     "action": "Quit",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "8f1ae4e8-41ec-446c-add2-f9ab31072f5c",
+                    "path": "<Keyboard>/p",
+                    "interactions": "Press",
+                    "processors": "",
+                    "groups": ";Keyboard&Mouse",
+                    "action": "TestContext_1",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
