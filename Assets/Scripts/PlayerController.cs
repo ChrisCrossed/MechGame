@@ -110,7 +110,21 @@ public class PlayerController : MonoBehaviour
         
         Vector3 v3_PlayerInput = new Vector3(v2_InputVector.x, 0, v2_InputVector.y).normalized;
 
+        // Default on-ground player input velocity conversion
         Vector3 playerVel = gameObject.transform.rotation * v3_PlayerInput;
+        
+        if(!OnGround)
+        {
+            if(JetpackActive)
+            {
+                playerVel *= 0.6f;
+            }
+            else
+            {
+                playerVel *= 0f;
+            }
+        }
+
         playerVel *= MoveSpeed;
         playerVel += yVel * Vector3.up;
 
@@ -122,28 +136,23 @@ public class PlayerController : MonoBehaviour
     private float Gravity = -9.81f * 5f;
 
     private float yVel;
-    private bool IsGrounded;
-    float hitYPos;
+    private bool OnGround;
     void UpdateJump()
     {
         RaycastHit _hit;
         int layerMask = LayerMask.GetMask("Terrain");
         CapsuleCollider _collider = gameObject.GetComponent<CapsuleCollider>();
         
-        IsGrounded = false;
+        OnGround = Physics.SphereCast(gameObject.transform.position, _collider.radius - 0.05f, Vector3.down, out _hit, _collider.radius + 0.14f, layerMask);
 
-        bool DownwardCastHit = Physics.SphereCast(gameObject.transform.position, _collider.radius - 0.05f, Vector3.down, out _hit, _collider.radius + 0.14f, layerMask);
-
-        if (DownwardCastHit && !JetpackActive)
+        if (OnGround && !JetpackActive)
         {
             yVel = 0f;
-            IsGrounded = true;
-            hitYPos = _hit.point.y;
 
             if (PlayerInput.GetJumpButton())
             {
                 yVel = Mathf.Sqrt(JumpHeight * -2f * Gravity);
-                IsGrounded = false;
+                OnGround = false;
             }
         }
         else
