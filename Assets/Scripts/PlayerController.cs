@@ -187,6 +187,11 @@ public class PlayerController : MonoBehaviour
             case JumpJetButtonState.Held:
                 
                 JetpackActive = true;
+
+                // Forcing initial velocity if player taps ground while using jetpack
+                if (OnGround)
+                    yVel = 0f;
+
                 yVel += Gravity / JetpackArmorGravityInfluence * -1f * Time.deltaTime;
 
                 if(yVel > JetpackMaxVertVelocity)
