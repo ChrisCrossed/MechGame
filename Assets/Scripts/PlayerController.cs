@@ -104,11 +104,43 @@ public class PlayerController : MonoBehaviour
 
     #region Update Functions
 
+    Vector2 v2_MovementVelocityPercentage;
+    float MovementVelocityRate;
+
     void UpdateMovement()
     {
         Vector2 v2_InputVector = PlayerInput.GetInputVector();
-        
-        Vector3 v3_PlayerInput = new Vector3(v2_InputVector.x, 0, v2_InputVector.y).normalized;
+
+        #region Update Velocity Direction Percentage
+        MovementVelocityRate = 10f * Time.deltaTime;
+        v2_InputVector.Normalize();
+
+        v2_MovementVelocityPercentage.x = MovementVelocityPerc(v2_MovementVelocityPercentage.x, v2_InputVector.x);
+        v2_MovementVelocityPercentage.y = MovementVelocityPerc(v2_MovementVelocityPercentage.y, v2_InputVector.y);
+
+        /*
+        if (v2_InputVector.x != v2_MovementVelocityPercentage.x)
+        {
+            if (v2_InputVector.x < v2_MovementVelocityPercentage.x)
+            {
+                v2_MovementVelocityPercentage.x -= MovementVelocityRate;
+
+                if (v2_MovementVelocityPercentage.x < v2_InputVector.x)
+                    v2_MovementVelocityPercentage.x = v2_InputVector.x;
+            }
+            else
+            {
+                v2_MovementVelocityPercentage.x += MovementVelocityRate;
+
+                if (v2_MovementVelocityPercentage.x > v2_InputVector.x)
+                    v2_MovementVelocityPercentage.x = v2_InputVector.x;
+            }
+        }
+        */
+
+        #endregion Update Velocity Direction Percentage
+
+        Vector3 v3_PlayerInput = new Vector3(v2_MovementVelocityPercentage.x, 0, v2_MovementVelocityPercentage.y);
 
         // Default on-ground player input velocity conversion
         Vector3 playerVel = gameObject.transform.rotation * v3_PlayerInput;
@@ -132,7 +164,6 @@ public class PlayerController : MonoBehaviour
     }
 
     private float JumpHeight = 1.5f;
-
     private float Gravity = -9.81f * 5f;
 
     private float yVel;
@@ -220,6 +251,29 @@ public class PlayerController : MonoBehaviour
     void UpdateQuitButton()
     {
         QuitPressed = PlayerInput.QuitButton();
+    }
+
+    float MovementVelocityPerc(float VelPercValue, float PlayerInputValue)
+    {
+        if (PlayerInputValue != VelPercValue)
+        {
+            if (PlayerInputValue < VelPercValue)
+            {
+                VelPercValue -= MovementVelocityRate;
+
+                if (VelPercValue < PlayerInputValue)
+                    VelPercValue = PlayerInputValue;
+            }
+            else
+            {
+                VelPercValue += MovementVelocityRate;
+
+                if (VelPercValue > PlayerInputValue)
+                    VelPercValue = PlayerInputValue;
+            }
+        }
+
+        return VelPercValue;
     }
 
     void ToggleCursorState(bool IsVisible)
