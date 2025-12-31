@@ -112,7 +112,11 @@ public class PlayerController : MonoBehaviour
         Vector2 v2_InputVector = PlayerInput.GetInputVector();
 
         #region Update Velocity Direction Percentage
-        MovementVelocityRate = 10f * Time.deltaTime;
+        if (!OnGround && JetpackActive)
+            MovementVelocityRate = 3f * Time.deltaTime;
+        else
+            MovementVelocityRate = 10f * Time.deltaTime;
+
         v2_InputVector.Normalize();
 
         v2_MovementVelocityPercentage = MovementVelocityPerc(v2_MovementVelocityPercentage, v2_InputVector);
@@ -125,7 +129,7 @@ public class PlayerController : MonoBehaviour
         Vector3 playerVel = gameObject.transform.rotation * v3_PlayerInput;
         
         if(!OnGround && JetpackActive)
-            playerVel *= 0.6f;
+            playerVel *= 0.65f;
 
         playerVel *= MoveSpeed;
         playerVel += yVel * Vector3.up;
@@ -143,7 +147,7 @@ public class PlayerController : MonoBehaviour
     }
 
     private float JumpHeight = 1.5f;
-    private float Gravity = -9.81f * 5f;
+    private float Gravity = -9.81f * 3.5f;
 
     private float yVel;
     private bool OnGround;
@@ -189,7 +193,7 @@ public class PlayerController : MonoBehaviour
                 JetpackActive = true;
 
                 // Forcing initial velocity if player taps ground while using jetpack
-                if (OnGround)
+                if (OnGround && yVel < 0f)
                     yVel = 0f;
 
                 yVel += Gravity / JetpackArmorGravityInfluence * -1f * Time.deltaTime;
