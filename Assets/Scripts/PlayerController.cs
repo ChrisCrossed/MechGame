@@ -106,7 +106,7 @@ public class PlayerController : MonoBehaviour
 
     Vector2 v2_MovementVelocityPercentage;
     float MovementVelocityRate;
-
+    Vector3 v3_LastFrameVelocity;
     void UpdateMovement()
     {
         Vector2 v2_InputVector = PlayerInput.GetInputVector();
@@ -115,28 +115,7 @@ public class PlayerController : MonoBehaviour
         MovementVelocityRate = 10f * Time.deltaTime;
         v2_InputVector.Normalize();
 
-        v2_MovementVelocityPercentage.x = MovementVelocityPerc(v2_MovementVelocityPercentage.x, v2_InputVector.x);
-        v2_MovementVelocityPercentage.y = MovementVelocityPerc(v2_MovementVelocityPercentage.y, v2_InputVector.y);
-
-        /*
-        if (v2_InputVector.x != v2_MovementVelocityPercentage.x)
-        {
-            if (v2_InputVector.x < v2_MovementVelocityPercentage.x)
-            {
-                v2_MovementVelocityPercentage.x -= MovementVelocityRate;
-
-                if (v2_MovementVelocityPercentage.x < v2_InputVector.x)
-                    v2_MovementVelocityPercentage.x = v2_InputVector.x;
-            }
-            else
-            {
-                v2_MovementVelocityPercentage.x += MovementVelocityRate;
-
-                if (v2_MovementVelocityPercentage.x > v2_InputVector.x)
-                    v2_MovementVelocityPercentage.x = v2_InputVector.x;
-            }
-        }
-        */
+        v2_MovementVelocityPercentage = MovementVelocityPerc(v2_MovementVelocityPercentage, v2_InputVector);
 
         #endregion Update Velocity Direction Percentage
 
@@ -145,20 +124,20 @@ public class PlayerController : MonoBehaviour
         // Default on-ground player input velocity conversion
         Vector3 playerVel = gameObject.transform.rotation * v3_PlayerInput;
         
-        if(!OnGround)
-        {
-            if(JetpackActive)
-            {
-                playerVel *= 0.6f;
-            }
-            else
-            {
-                playerVel *= 0f;
-            }
-        }
+        if(!OnGround && JetpackActive)
+            playerVel *= 0.6f;
 
         playerVel *= MoveSpeed;
         playerVel += yVel * Vector3.up;
+
+        // OVERRIDE values if player isn't using Jetpack and isn't on the ground.
+        if(!OnGround && !JetpackActive)
+        {
+            playerVel = v3_LastFrameVelocity;
+            playerVel.y = yVel;
+        }
+
+        v3_LastFrameVelocity = playerVel;
 
         this_CharController.Move(playerVel * Time.deltaTime);
     }
@@ -253,6 +232,39 @@ public class PlayerController : MonoBehaviour
         QuitPressed = PlayerInput.QuitButton();
     }
 
+    void ToggleCursorState(bool IsVisible)
+    {
+        if (!IsVisible)
+            Cursor.lockState = CursorLockMode.Locked;
+        else
+            Cursor.lockState = CursorLockMode.None;
+
+            Cursor.visible = IsVisible;
+    }
+
+    #endregion Update Functions
+
+    #region Physics Updates
+
+    private void FixedUpdate()
+    {
+        
+    }
+
+    #endregion Physics Updates
+
+    #region Math Functions
+
+
+    Vector2 MovementVelocityPerc(Vector2 VelPercValue, Vector2 PlayerInputValue)
+    {
+        Vector2 output = new Vector2();
+
+        output.x = MovementVelocityPerc(VelPercValue.x, PlayerInputValue.x);
+        output.y = MovementVelocityPerc(VelPercValue.y, PlayerInputValue.y);
+
+        return output;
+    }
     float MovementVelocityPerc(float VelPercValue, float PlayerInputValue)
     {
         if (PlayerInputValue != VelPercValue)
@@ -276,27 +288,7 @@ public class PlayerController : MonoBehaviour
         return VelPercValue;
     }
 
-    void ToggleCursorState(bool IsVisible)
-    {
-        if (!IsVisible)
-            Cursor.lockState = CursorLockMode.Locked;
-        else
-            Cursor.lockState = CursorLockMode.None;
-
-            Cursor.visible = IsVisible;
-    }
-
-    #endregion Update Functions
-
-    #region Physics Updates
-
-    private void FixedUpdate()
-    {
-        
-    }
-
-    #endregion Physics Updates
-
+    #endregion Math Functions
 
     #region Collider Extensions
 
