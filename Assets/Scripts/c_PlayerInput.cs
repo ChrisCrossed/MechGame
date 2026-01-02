@@ -106,25 +106,25 @@ public class c_PlayerInput : MonoBehaviour
     {
         JumpJetButtonState state = new JumpJetButtonState();
 
-        IsPressed_Jump = inputObject.JumpJetState;
+        IsPressed_JumpJet = inputObject.JumpJetState;
 
         // Logic
-        if(IsPressed_Jump)
+        if(IsPressed_JumpJet)
         {
-            if (WasPressed_Jump)
+            if (WasPressed_JumpJet)
                 state = JumpJetButtonState.Held;
             else
                 state = JumpJetButtonState.Pressed;
         }
         else
         {
-            if (WasPressed_Jump)
+            if (WasPressed_JumpJet)
                 state = JumpJetButtonState.Released;
             else
                 state = JumpJetButtonState.Off;
         }
 
-        WasPressed_Jump = IsPressed_Jump;
+        WasPressed_JumpJet = IsPressed_JumpJet;
 
         return state;
     }
