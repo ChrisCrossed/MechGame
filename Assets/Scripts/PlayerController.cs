@@ -151,6 +151,7 @@ public class PlayerController : MonoBehaviour
 
     private float yVel;
     private bool OnGround;
+    private bool OnGround_OLD;
     void UpdateJump()
     {
         RaycastHit _hit;
@@ -158,7 +159,23 @@ public class PlayerController : MonoBehaviour
         CapsuleCollider _collider = gameObject.GetComponent<CapsuleCollider>();
         
         OnGround = Physics.SphereCast(gameObject.transform.position, _collider.radius - 0.05f, Vector3.down, out _hit, _collider.radius + 0.14f, layerMask);
+        
 
+        // If player was previously in the air but is now touching down, apply friction if horizontal velocity is over a minimum.
+        if (!OnGround_OLD && OnGround)
+        {
+            Vector2 horizVel = new Vector2(this_CharController.velocity.x, this_CharController.velocity.z);
+            float mag = horizVel.magnitude;
+
+            print("Mag: " + mag);
+            if(mag > 7f)
+            {
+                // TODO: Apply a temporary movement override system that doesn't allow the player to use input for movement
+                // During this time, continue direction moving but at constantly decreased velocity for short moment.
+            }
+        }
+
+        // If there player is on the ground and using Jetpack, reset vertical velocity to allow upward movement.
         if (OnGround && !JetpackActive)
         {
             yVel = 0f;
@@ -175,7 +192,7 @@ public class PlayerController : MonoBehaviour
                 yVel += Gravity * Time.deltaTime;
         }
 
-        
+        OnGround_OLD = OnGround;
     }
 
     bool JetpackActive = false;
