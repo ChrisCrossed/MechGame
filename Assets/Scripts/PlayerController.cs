@@ -128,9 +128,17 @@ public class PlayerController : MonoBehaviour
         Vector3 v3_PlayerInput = new Vector3(v2_MovementVelocityPercentage.x, 0, v2_MovementVelocityPercentage.y);
 
         // Default on-ground player input velocity conversion
+        // Vector3 playerVel = gameObject.transform.rotation * v3_PlayerInput;
+        v3_PlayerInput = Vector3.ProjectOnPlane(v3_PlayerInput, -normal);
+        Debug.DrawRay(gameObject.transform.position, v3_PlayerInput * 5.0f, Color.red);
         Vector3 playerVel = gameObject.transform.rotation * v3_PlayerInput;
-        
-        if(!OnGround && JetpackActive)
+
+        if (OnGround)
+        {
+            this_CharController.Move(-Vector3.up * 0.25f);
+        }
+
+        if (!OnGround && JetpackActive)
             playerVel *= 0.65f;
 
         playerVel *= MoveSpeed;
@@ -148,9 +156,11 @@ public class PlayerController : MonoBehaviour
         this_CharController.Move(playerVel * Time.deltaTime);
     }
 
+    Vector3 v3_DownwardGroundPlaneVector;
+    Vector3 v3_PlayerPlaneVector;
+    Vector3 normal;
     private float JumpHeight = 1.5f;
     private float Gravity = -9.81f * 3.5f;
-
     private float yVel;
     private bool OnGround;
     private bool OnGround_OLD;
@@ -160,11 +170,18 @@ public class PlayerController : MonoBehaviour
         int layerMask = LayerMask.GetMask("Terrain");
         CapsuleCollider _collider = gameObject.GetComponent<CapsuleCollider>();
 
-        OnGround = Physics.SphereCast(gameObject.transform.position, _collider.radius - 0.05f, Vector3.down, out _hit, _collider.radius + 0.14f, layerMask);
+        OnGround = Physics.SphereCast(gameObject.transform.position, _collider.radius - 0.05f, Vector3.down, out _hit, _collider.radius + 0.25f, layerMask);
 
-        // float angle = Vector3.Angle(Vector3.up, _hit.normal);
-        Vector3 v3_ProjectedVector = Vector3.ProjectOnPlane(gameObject.transform.forward, _hit.normal).normalized;
-        Debug.DrawRay(_hit.point, v3_ProjectedVector * 10f, Color.blue);
+        if (OnGround)
+        {
+            v3_DownwardGroundPlaneVector = Vector3.ProjectOnPlane(-Vector3.up, _hit.normal).normalized;
+            v3_PlayerPlaneVector = Vector3.ProjectOnPlane(gameObject.transform.forward, _hit.normal).normalized;
+            normal = _hit.normal;
+
+            // float angle = Vector3.Angle(Vector3.up, _hit.normal);
+            Vector3 v3_ProjectedVector = Vector3.ProjectOnPlane(gameObject.transform.forward, _hit.normal).normalized;
+            Debug.DrawRay(_hit.point, v3_ProjectedVector * 10f, Color.blue);
+        }
 
         // If player was previously in the air but is now touching down, apply friction if horizontal velocity is over a minimum.
         if (!OnGround_OLD && OnGround)
