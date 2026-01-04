@@ -12,6 +12,7 @@ public class PlayerController : MonoBehaviour
 
     private Rigidbody this_Rigidbody;
     private GameObject this_CameraObject;
+    private GameObject this_GroundRaycastPos;
 
     private bool PlayerJump;
 
@@ -53,6 +54,7 @@ public class PlayerController : MonoBehaviour
         this_Rigidbody = gameObject.GetComponent<Rigidbody>();
 
         this_CharController = gameObject.GetComponent<CharacterController>();
+        this_GroundRaycastPos = gameObject.transform.Find("GroundRaycastPos").gameObject;
 
         this_CameraObject = gameObject.transform.Find("Main Camera").gameObject;
         cameraAngle = this_CameraObject.transform.localEulerAngles.x;
@@ -157,9 +159,12 @@ public class PlayerController : MonoBehaviour
         RaycastHit _hit;
         int layerMask = LayerMask.GetMask("Terrain");
         CapsuleCollider _collider = gameObject.GetComponent<CapsuleCollider>();
-        
+
         OnGround = Physics.SphereCast(gameObject.transform.position, _collider.radius - 0.05f, Vector3.down, out _hit, _collider.radius + 0.14f, layerMask);
-        
+
+        // float angle = Vector3.Angle(Vector3.up, _hit.normal);
+        Vector3 v3_ProjectedVector = Vector3.ProjectOnPlane(gameObject.transform.forward, _hit.normal).normalized;
+        Debug.DrawRay(_hit.point, v3_ProjectedVector * 10f, Color.blue);
 
         // If player was previously in the air but is now touching down, apply friction if horizontal velocity is over a minimum.
         if (!OnGround_OLD && OnGround)
