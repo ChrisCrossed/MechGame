@@ -107,6 +107,7 @@ public class PlayerController : MonoBehaviour
 
     #region Update Functions
 
+    bool b_JustTouchedGround;
     void UpdateGroundState()
     {
         if (b_JumpDelayActive)
@@ -117,6 +118,11 @@ public class PlayerController : MonoBehaviour
         CapsuleCollider _collider = gameObject.GetComponent<CapsuleCollider>();
 
         OnGround = Physics.SphereCast(gameObject.transform.position, _collider.radius - 0.05f, Vector3.down, out _hit, _collider.radius + 0.25f, layerMask);
+
+        // If last frame we were off the ground and just touched down,
+        b_JustTouchedGround = false;
+        if (!OnGround_OLD && OnGround)
+            b_JustTouchedGround = true;
 
         if (OnGround)
         {
@@ -136,22 +142,6 @@ public class PlayerController : MonoBehaviour
     private bool OnGround_OLD;
     void UpdateJump()
     {
-        
-
-        // If player was previously in the air but is now touching down, apply friction if horizontal velocity is over a minimum.
-        if (!OnGround_OLD && OnGround)
-        {
-            Vector2 horizVel = new Vector2(this_CharController.velocity.x, this_CharController.velocity.z);
-            float mag = horizVel.magnitude;
-
-            print("Mag: " + mag);
-            if (mag > 7f)
-            {
-                // TODO: Apply a temporary movement override system that doesn't allow the player to use input for movement
-                // During this time, continue direction moving but at constantly decreased velocity for short moment.
-            }
-        }
-
         // If there player is on the ground and using Jetpack, reset vertical velocity to allow upward movement.
         if (OnGround && !JetpackActive)
         {
@@ -212,15 +202,62 @@ public class PlayerController : MonoBehaviour
     Vector2 v2_MovementVelocityPercentage;
     float MovementVelocityRate;
     Vector3 v3_LastFrameVelocity;
+    float f_MovementVelocityPerc = 1.0f;
+    float f_MoveSpeedPenaltyTimer = 0f;
+    float f_MoveSpeedPenaltyPerc = 0.3f;
+    float f_MoveSpeedPenaltyTimer_MAX = 0.1f;
+    float f_JetpackAirborneVelocityModifier = 0.75f;
     void UpdateMovement()
     {
+        if(OnGround && b_JustTouchedGround)
+        {
+            // Only allow velocity to be reduced upon touchdown if moving over a certain speed
+            if (GetMoveSpeed() < (f_JetpackAirborneVelocityModifier * MoveSpeed) + 0.05f)
+                b_JustTouchedGround = false;
+        }
+
+        #region Apply limits to momentum when first touching the ground
+
+        // WARNING: This increases the Maximum Velocity Percentage, but gets overwritten below if the player's move speed penalty is still being applied.
+        if (f_MovementVelocityPerc < 1.0f)
+        {
+            f_MovementVelocityPerc += Time.deltaTime / f_MoveSpeedPenaltyTimer_MAX;
+
+            if (f_MovementVelocityPerc > 1.0f)
+                f_MovementVelocityPerc = 1.0f;
+        }
+
+        // When less than the Move Speed Penalty Timer is less than MAX, hard force the max move speed penalty
+        if (f_MoveSpeedPenaltyTimer < f_MoveSpeedPenaltyTimer_MAX)
+        {
+            // Forces a move speed penalty
+            f_MovementVelocityPerc = f_MoveSpeedPenaltyPerc;
+
+            // Increase/Cap the Penalty Timer
+            f_MoveSpeedPenaltyTimer += Time.deltaTime;
+
+            if (f_MoveSpeedPenaltyTimer > f_MoveSpeedPenaltyTimer_MAX)
+                f_MoveSpeedPenaltyTimer = f_MoveSpeedPenaltyTimer_MAX;
+        }
+
+        // Otherwise, If player is moving max velocity and just touched down this frame, Apply the Move Speed Penalty and reset the timer.
+        if(b_JustTouchedGround)
+        {
+            f_MovementVelocityPerc = f_MoveSpeedPenaltyPerc;
+
+            f_MoveSpeedPenaltyTimer = 0f;
+        }
+
+        #endregion Apply limits to momentum when first touching the ground
+
         Vector2 v2_InputVector = PlayerInput.GetInputVector();
 
         #region Update Velocity Direction Percentage
+
         if (!OnGround && JetpackActive)
             MovementVelocityRate = 3f * Time.deltaTime;
         else
-            MovementVelocityRate = 10f * Time.deltaTime;
+            MovementVelocityRate = 10f * Time.deltaTime * f_MovementVelocityPerc;
 
         v2_InputVector.Normalize();
 
@@ -231,28 +268,29 @@ public class PlayerController : MonoBehaviour
         Vector3 v3_PlayerInput = new Vector3(v2_MovementVelocityPercentage.x, 0, v2_MovementVelocityPercentage.y);
 
         // Default on-ground player input velocity conversion
-        // Vector3 playerVel = gameObject.transform.rotation * v3_PlayerInput;
         v3_PlayerInput = Vector3.ProjectOnPlane(v3_PlayerInput, -v3_GroundNormal);
         Debug.DrawRay(gameObject.transform.position, v3_PlayerInput * 5.0f, Color.red);
         Vector3 playerVel = gameObject.transform.rotation * v3_PlayerInput;
 
+        // Push player slightly downward, 'snapping' them upon the ground.
         if (OnGround)
-        {
             this_CharController.Move(-Vector3.up * 0.25f);
-        }
 
+        #region Don't touch this order
+        // If player is in the air and using jetpack, reduce directional velocity
         if (!OnGround && JetpackActive)
-            playerVel *= 0.65f;
+            playerVel *= f_JetpackAirborneVelocityModifier;
 
-        playerVel *= MoveSpeed;
+        playerVel *= MoveSpeed * f_MovementVelocityPerc;
         playerVel += yVel * Vector3.up;
 
-        // OVERRIDE values if player isn't using Jetpack and isn't on the ground.
+        // OVERRIDE values if player isn't using Jetpack and isn't on the ground. (That's why this goes below above settings)
         if(!OnGround && !JetpackActive)
         {
             playerVel = v3_LastFrameVelocity;
             playerVel.y = yVel;
         }
+        #endregion Don't touch this order
 
         v3_LastFrameVelocity = playerVel;
 
@@ -360,6 +398,10 @@ public class PlayerController : MonoBehaviour
         return VelPercValue;
     }
 
+    public float GetMoveSpeed()
+    {
+        return new Vector2(this_CharController.velocity.x, this_CharController.velocity.z).magnitude;
+    }
     #endregion Math Functions
 
     #region Collider Extensions
