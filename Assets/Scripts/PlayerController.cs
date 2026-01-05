@@ -67,6 +67,7 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        UpdateGroundState();
         UpdateJump();
         UpdateJumpJet();
         UpdateLook();
@@ -106,6 +107,108 @@ public class PlayerController : MonoBehaviour
 
     #region Update Functions
 
+    void UpdateGroundState()
+    {
+        if (b_JumpDelayActive)
+            return;
+
+        RaycastHit _hit;
+        int layerMask = LayerMask.GetMask("Terrain");
+        CapsuleCollider _collider = gameObject.GetComponent<CapsuleCollider>();
+
+        OnGround = Physics.SphereCast(gameObject.transform.position, _collider.radius - 0.05f, Vector3.down, out _hit, _collider.radius + 0.25f, layerMask);
+
+        if (OnGround)
+        {
+            v3_GroundNormal = _hit.normal;
+
+            // float angle = Vector3.Angle(Vector3.up, _hit.normal);
+            Vector3 v3_ProjectedVector = Vector3.ProjectOnPlane(gameObject.transform.forward, _hit.normal).normalized;
+            Debug.DrawRay(_hit.point, v3_ProjectedVector * 10f, Color.blue);
+        }
+    }
+
+    Vector3 v3_GroundNormal;
+    private float JumpHeight = 1.5f;
+    private float Gravity = -9.81f * 3.5f;
+    private float yVel;
+    private bool OnGround;
+    private bool OnGround_OLD;
+    void UpdateJump()
+    {
+        
+
+        // If player was previously in the air but is now touching down, apply friction if horizontal velocity is over a minimum.
+        if (!OnGround_OLD && OnGround)
+        {
+            Vector2 horizVel = new Vector2(this_CharController.velocity.x, this_CharController.velocity.z);
+            float mag = horizVel.magnitude;
+
+            print("Mag: " + mag);
+            if (mag > 7f)
+            {
+                // TODO: Apply a temporary movement override system that doesn't allow the player to use input for movement
+                // During this time, continue direction moving but at constantly decreased velocity for short moment.
+            }
+        }
+
+        // If there player is on the ground and using Jetpack, reset vertical velocity to allow upward movement.
+        if (OnGround && !JetpackActive)
+        {
+            yVel = 0f;
+
+            if (PlayerInput.GetJumpButton())
+            {
+                yVel = Mathf.Sqrt(JumpHeight * -2f * Gravity);
+
+                StartCoroutine(JumpDelay());
+                OnGround = false;
+            }
+        }
+        else
+        {
+            if (!JetpackActive)
+                yVel += Gravity * Time.deltaTime;
+        }
+
+        OnGround_OLD = OnGround;
+    }
+
+    bool JetpackActive = false;
+    float JetpackMaxVertVelocity = 7f; // 4 Feels like Tribes 'Heavy' Velocity
+    float JetpackArmorGravityInfluence = 10f;
+    void UpdateJumpJet()
+    {
+        JumpJetButtonState state = PlayerInput.JumpJetState();
+
+        switch (state)
+        {
+            case JumpJetButtonState.Pressed:
+            case JumpJetButtonState.Held:
+
+                JetpackActive = true;
+
+                // Forcing initial velocity if player taps ground while using jetpack
+                if (OnGround && yVel < 0f)
+                    yVel = 0f;
+
+                yVel += Gravity / JetpackArmorGravityInfluence * -1f * Time.deltaTime;
+
+                if (yVel > JetpackMaxVertVelocity)
+                    yVel = JetpackMaxVertVelocity;
+
+                print("Vert Vel: " + (Gravity / JetpackArmorGravityInfluence * -1f * Time.deltaTime));
+                break;
+            case JumpJetButtonState.Released:
+            case JumpJetButtonState.Off:
+                JetpackActive = false;
+                break;
+            default:
+                break;
+        }
+    }
+
+
     Vector2 v2_MovementVelocityPercentage;
     float MovementVelocityRate;
     Vector3 v3_LastFrameVelocity;
@@ -129,7 +232,7 @@ public class PlayerController : MonoBehaviour
 
         // Default on-ground player input velocity conversion
         // Vector3 playerVel = gameObject.transform.rotation * v3_PlayerInput;
-        v3_PlayerInput = Vector3.ProjectOnPlane(v3_PlayerInput, -normal);
+        v3_PlayerInput = Vector3.ProjectOnPlane(v3_PlayerInput, -v3_GroundNormal);
         Debug.DrawRay(gameObject.transform.position, v3_PlayerInput * 5.0f, Color.red);
         Vector3 playerVel = gameObject.transform.rotation * v3_PlayerInput;
 
@@ -156,101 +259,7 @@ public class PlayerController : MonoBehaviour
         this_CharController.Move(playerVel * Time.deltaTime);
     }
 
-    Vector3 v3_DownwardGroundPlaneVector;
-    Vector3 v3_PlayerPlaneVector;
-    Vector3 normal;
-    private float JumpHeight = 1.5f;
-    private float Gravity = -9.81f * 3.5f;
-    private float yVel;
-    private bool OnGround;
-    private bool OnGround_OLD;
-    void UpdateJump()
-    {
-        RaycastHit _hit;
-        int layerMask = LayerMask.GetMask("Terrain");
-        CapsuleCollider _collider = gameObject.GetComponent<CapsuleCollider>();
-
-        OnGround = Physics.SphereCast(gameObject.transform.position, _collider.radius - 0.05f, Vector3.down, out _hit, _collider.radius + 0.25f, layerMask);
-
-        if (OnGround)
-        {
-            v3_DownwardGroundPlaneVector = Vector3.ProjectOnPlane(-Vector3.up, _hit.normal).normalized;
-            v3_PlayerPlaneVector = Vector3.ProjectOnPlane(gameObject.transform.forward, _hit.normal).normalized;
-            normal = _hit.normal;
-
-            // float angle = Vector3.Angle(Vector3.up, _hit.normal);
-            Vector3 v3_ProjectedVector = Vector3.ProjectOnPlane(gameObject.transform.forward, _hit.normal).normalized;
-            Debug.DrawRay(_hit.point, v3_ProjectedVector * 10f, Color.blue);
-        }
-
-        // If player was previously in the air but is now touching down, apply friction if horizontal velocity is over a minimum.
-        if (!OnGround_OLD && OnGround)
-        {
-            Vector2 horizVel = new Vector2(this_CharController.velocity.x, this_CharController.velocity.z);
-            float mag = horizVel.magnitude;
-
-            print("Mag: " + mag);
-            if(mag > 7f)
-            {
-                // TODO: Apply a temporary movement override system that doesn't allow the player to use input for movement
-                // During this time, continue direction moving but at constantly decreased velocity for short moment.
-            }
-        }
-
-        // If there player is on the ground and using Jetpack, reset vertical velocity to allow upward movement.
-        if (OnGround && !JetpackActive)
-        {
-            yVel = 0f;
-
-            if (PlayerInput.GetJumpButton())
-            {
-                yVel = Mathf.Sqrt(JumpHeight * -2f * Gravity);
-                OnGround = false;
-            }
-        }
-        else
-        {
-            if(!JetpackActive)
-                yVel += Gravity * Time.deltaTime;
-        }
-
-        OnGround_OLD = OnGround;
-    }
-
-    bool JetpackActive = false;
-    float JetpackMaxVertVelocity = 7f; // 4 Feels like Tribes 'Heavy' Velocity
-    float JetpackArmorGravityInfluence = 10f;
-    void UpdateJumpJet()
-    {
-        JumpJetButtonState state = PlayerInput.JumpJetState();
-
-        switch (state)
-        {
-            case JumpJetButtonState.Pressed:
-            case JumpJetButtonState.Held:
-                
-                JetpackActive = true;
-
-                // Forcing initial velocity if player taps ground while using jetpack
-                if (OnGround && yVel < 0f)
-                    yVel = 0f;
-
-                yVel += Gravity / JetpackArmorGravityInfluence * -1f * Time.deltaTime;
-
-                if(yVel > JetpackMaxVertVelocity)
-                    yVel = JetpackMaxVertVelocity;
-
-                print("Vert Vel: " + (Gravity / JetpackArmorGravityInfluence * -1f * Time.deltaTime));
-                break;
-            case JumpJetButtonState.Released:
-            case JumpJetButtonState.Off:
-                JetpackActive = false;
-                break;
-            default:
-                break;
-        }
-    }
-
+    
     float cameraAngle;
     void UpdateLook()
     {
@@ -297,6 +306,21 @@ public class PlayerController : MonoBehaviour
     private void FixedUpdate()
     {
         
+    }
+
+    bool b_JumpDelayActive;
+    private IEnumerator JumpDelay()
+    {
+        b_JumpDelayActive = true;
+        print("On");
+
+        yield return new WaitForSeconds(0.1f);
+
+        print("Off");
+
+        b_JumpDelayActive = false;
+
+        yield return null;
     }
 
     #endregion Physics Updates
