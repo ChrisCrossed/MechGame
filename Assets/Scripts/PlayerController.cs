@@ -117,7 +117,7 @@ public class PlayerController : MonoBehaviour
         int layerMask = LayerMask.GetMask("Terrain");
         CapsuleCollider _collider = gameObject.GetComponent<CapsuleCollider>();
 
-        OnGround = Physics.SphereCast(gameObject.transform.position, _collider.radius - 0.05f, Vector3.down, out _hit, _collider.radius + 0.25f, layerMask);
+        OnGround = Physics.SphereCast(gameObject.transform.position, _collider.radius - 0.001f, Vector3.down, out _hit, _collider.radius + 0.25f, layerMask);
 
         // If last frame we were off the ground and just touched down,
         b_JustTouchedGround = false;
