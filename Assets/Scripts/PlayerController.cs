@@ -167,6 +167,7 @@ public class PlayerController : MonoBehaviour
     bool JetpackActive = false;
     float JetpackMaxVertVelocity = 7f; // 4 Feels like Tribes 'Heavy' Velocity
     float JetpackArmorGravityInfluence = 10f;
+    
     void UpdateJumpJet()
     {
         JumpJetButtonState state = PlayerInput.JumpJetState();
@@ -207,9 +208,14 @@ public class PlayerController : MonoBehaviour
     float f_MoveSpeedPenaltyPerc = 0.3f;
     float f_MoveSpeedPenaltyTimer_MAX = 0.1f;
     float f_JetpackAirborneVelocityModifier = 0.75f;
+    Vector3 JetpackVector_Prior;
+    float JetpackMagnitude_Prior;
     void UpdateMovement()
     {
-        if(OnGround && b_JustTouchedGround)
+        JetpackVector_Prior = this_CharController.velocity.normalized;
+        JetpackMagnitude_Prior = this_CharController.velocity.magnitude;
+
+        if (OnGround && b_JustTouchedGround)
         {
             // Only allow velocity to be reduced upon touchdown if moving over a certain speed
             if (GetMoveSpeed() < (f_JetpackAirborneVelocityModifier * MoveSpeed) + 0.05f)
@@ -283,6 +289,15 @@ public class PlayerController : MonoBehaviour
 
         playerVel *= MoveSpeed * f_MovementVelocityPerc;
         playerVel += yVel * Vector3.up;
+
+        Debug.DrawRay(gameObject.transform.position, JetpackVector_Prior * 5.0f, Color.orangeRed);
+
+        // LERP from previous direction into new desired direction IF using Jetpack and looking in new direction
+        if(!OnGround && JetpackActive)
+        {
+            // TODO: Concern - I'm dealing with desired direction in 3 axis (Y) but potentially evaluating against no Y axis vel from last frame. I think?
+            playerVel = Vector3.Lerp(JetpackVector_Prior * JetpackMagnitude_Prior, playerVel, 2.50f * Time.deltaTime);
+        }
 
         // OVERRIDE values if player isn't using Jetpack and isn't on the ground. (That's why this goes below above settings)
         if(!OnGround && !JetpackActive)
