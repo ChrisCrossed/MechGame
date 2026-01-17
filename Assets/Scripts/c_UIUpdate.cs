@@ -48,6 +48,6 @@ public class c_UIUpdate : MonoBehaviour
             GO_UIText_Velocity.GetComponent<TMP_Text>().text = "Vel: " + string.Format("{0:#.00}", moveSpeed );
         }
 
-        yield return null;
+        // yield return null;
     }
 }
