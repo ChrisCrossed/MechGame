@@ -19,7 +19,7 @@ public class PlayerController : MonoBehaviour
     private CharacterController this_CharController;
 
     #region TestContext States
-    private bool TestContext_1;
+    private bool MouseCursorVisable;
     #endregion TestContext States
 
     [SerializeField]
@@ -31,13 +31,65 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     private float VerticalLookMultiplier;
 
+    GameObject MultiplayerMenuObject;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        // Chris Test
-        print("Start");
         INIT_PlayerInput();
         INIT_PlayerObjectComponents();
+
+        ToggleMenu(MenuState);
+    }
+
+    bool MenuScreenActive = false;
+    public void CoherenceLobbyCompleted()
+    {
+        MenuScreenActive = false;
+    }
+
+    IEnumerator CoherenceMenuLobbyScreenWait()
+    {
+        MenuScreenActive = true;
+
+        while (!MenuState)
+            yield return new WaitForEndOfFrame();
+
+        CoherenceLobbyCompleted();
+
+        yield return null;
+    }
+
+    bool MenuState;
+    void ToggleMenu(bool _menuState)
+    {
+        print("Menu: " + _menuState);
+
+        MultiplayerMenuObject.SetActive(_menuState);
+
+        MouseCursorVisable = _menuState;
+        ToggleCursorState(MouseCursorVisable);
+        gameObject.transform.Find("Canvas").gameObject.SetActive(!_menuState);
+
+        if(_menuState)
+            StartCoroutine( CoherenceMenuLobbyScreenWait() );
+
+        /*
+        if(_menuState) // Enable Menu
+        {
+            
+        }
+        else // Disable Menu / Play Game
+        {
+            GameObject.Find("UI").gameObject.SetActive(false);
+
+            MouseCursorVisable = false;
+            ToggleCursorState(MouseCursorVisable);
+            gameObject.transform.Find("Canvas").gameObject.SetActive(true);
+
+            CoherenceLobbyCompleted();
+        }
+        */
     }
 
     #region Init Functions
@@ -45,8 +97,7 @@ public class PlayerController : MonoBehaviour
     {
         PlayerInput = GameObject.Find("GameManager").GetComponent<c_PlayerInput>();
 
-        TestContext_1 = false;
-        ToggleCursorState(TestContext_1);
+        // gameObject.transform.Find("Canvas").gameObject.SetActive(false);
     }
 
     void INIT_PlayerObjectComponents()
@@ -58,6 +109,8 @@ public class PlayerController : MonoBehaviour
 
         this_CameraObject = gameObject.transform.Find("Main Camera").gameObject;
         cameraAngle = this_CameraObject.transform.localEulerAngles.x;
+
+        MultiplayerMenuObject = GameObject.Find("UI").gameObject;
     }
 
     #endregion Init Functions
@@ -67,6 +120,19 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        #region Multiplayer Menu Toggle
+        if (QuitPressed)
+        {
+            MenuState = !MenuState;
+
+            ToggleMenu(MenuState);
+        }
+
+        if (MenuScreenActive)
+            return;
+        
+        #endregion
+
         UpdateGroundState();
         UpdateJump();
         UpdateJumpJet();
@@ -98,8 +164,8 @@ public class PlayerController : MonoBehaviour
         #region Mouse Cursor
         if(PlayerInput.TestContext_1())
         {
-            TestContext_1 = !TestContext_1;
-            ToggleCursorState(TestContext_1);
+            MouseCursorVisable = !MouseCursorVisable;
+            ToggleCursorState(MouseCursorVisable);
         }
 
         #endregion Mouse Cursor
